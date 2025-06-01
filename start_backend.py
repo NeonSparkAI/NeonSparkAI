@@ -39,21 +39,37 @@ def check_and_install_tesseract():
     logger = logging.getLogger(__name__)
     
     try:
-        result = subprocess.run(['tesseract', '--version'], 
-                              capture_output=True, text=True, check=True)
-        logger.info("Tesseract OCR found ✓")
+        # First check if Tesseract is in PATH
+        result = subprocess.run(['which', 'tesseract'], 
+                              capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            # If not in PATH, check common locations
+            common_paths = [
+                '/usr/bin/tesseract',
+                '/usr/local/bin/tesseract',
+                '/opt/homebrew/bin/tesseract'  # For macOS
+            ]
+            
+            for path in common_paths:
+                if os.path.exists(path):
+                    os.environ['PATH'] = f"{os.path.dirname(path)}:{os.environ.get('PATH', '')}"
+                    break
+        
+        # Now check version
+        version_result = subprocess.run(
+            ['tesseract', '--version'],
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        
+        logger.info(f"Tesseract found: {version_result.stdout.split('\n')[0]}")
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        logger.warning("Tesseract OCR not found")
-        logger.info("Please install Tesseract OCR:")
         
-        if platform.system() == "Windows":
-            logger.info("Download from: https://github.com/UB-Mannheim/tesseract/wiki")
-        elif platform.system() == "Darwin":  # macOS
-            logger.info("Run: brew install tesseract")
-        else:  # Linux
-            logger.info("Run: sudo apt-get install tesseract-ocr")
-        
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.warning(f"Tesseract OCR not found or not accessible: {str(e)}")
+        logger.warning("OCR features will be limited")
         return False
 
 def install_dependencies():
@@ -100,26 +116,46 @@ def start_server():
     logger = logging.getLogger(__name__)
     
     try:
-        logger.info("Starting NeonSpark AI Backend server...")
-        logger.info("Server will be available at: http://localhost:3000")
-        logger.info("API documentation: http://localhost:3000/api/docs")
-        logger.info("Press Ctrl+C to stop the server")
+        # Get port from environment variable or use default
+        port = int(os.getenv('PORT', '3000'))
+        host = os.getenv('HOST', '0.0.0.0')
+        
+        logger.info("=" * 60)
+        logger.info(f"Starting NeonSpark AI Backend server on {host}:{port}")
+        logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
+        logger.info(f"Python version: {platform.python_version()}")
+        logger.info("=" * 60)
+        
+        # Log important environment variables (without sensitive values)
+        env_vars = ['HOST', 'PORT', 'ENVIRONMENT', 'LOG_LEVEL']
+        logger.info("Environment variables:")
+        for var in env_vars:
+            if os.getenv(var):
+                logger.info(f"  {var}: {os.getenv(var)}")
         
         # Import and run the application
         import uvicorn
-        uvicorn.run(
-            "main:app",
-            host="0.0.0.0",
-            port=3000,
-            reload=False,
-            log_level="info",
-            access_log=True
+        
+        # Configure uvicorn
+        config = uvicorn.Config(
+            app="main:app",
+            host=host,
+            port=port,
+            log_level=os.getenv('LOG_LEVEL', 'info').lower(),
+            access_log=True,
+            workers=int(os.getenv('WEB_CONCURRENCY', '1')),
+            timeout_keep_alive=300,  # 5 minutes
+            proxy_headers=True,
+            forwarded_allow_ips='*'  # For handling X-Forwarded-* headers
         )
         
+        server = uvicorn.Server(config)
+        server.run()
+        
     except KeyboardInterrupt:
-        logger.info("Server stopped by user")
+        logger.info("\nServer stopped by user")
     except Exception as e:
-        logger.error(f"Failed to start server: {e}")
+        logger.error(f"Failed to start server: {e}", exc_info=True)
         return False
     
     return True
