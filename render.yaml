@@ -2,9 +2,19 @@ services:
   - type: web
     name: neonspark-ai
     env: python
+    region: singapore  # Optional: Choose a region closer to your users
     buildCommand: chmod +x ./build.sh && ./build.sh
     startCommand: python start_backend.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONPATH
+        value: "/opt/render/project/src:/opt/render/project"
+    autoDeploy: yes
     plan: free
+    build:
+      commands:
+        - chmod +x ./build.sh
+        - ./build.sh
