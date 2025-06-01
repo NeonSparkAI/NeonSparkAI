@@ -1,0 +1,46 @@
+
+# FastAPI and web server
+fastapi==0.109.1
+uvicorn[standard]==0.25.0
+python-multipart==0.0.6
+
+# WebSocket support
+websockets==12.0
+
+# Pydantic for data validation
+pydantic==2.5.3
+
+# Google Gemini AI (updated for 1.5 Flash)
+google-generativeai==0.4.0
+
+# Computer Vision - OpenCV and related
+opencv-python==4.9.0.80
+Pillow==10.2.0
+pytesseract==0.3.10
+
+# Scientific computing
+numpy==1.26.3
+
+# Async and HTTP utilities
+aiofiles==23.2.1
+aiohttp==3.9.1
+requests==2.31.0
+
+# System monitoring
+psutil==5.9.7
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# File type detection
+python-magic==0.4.27
+
+# Additional utilities for production
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==4.1.2
+
+# Logging and monitoring
+structlog==23.2.0
+
+# CORS handling
+fastapi-cors==0.0.6
