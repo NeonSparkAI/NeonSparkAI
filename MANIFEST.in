@@ -1,0 +1,7 @@
+include README.md
+include requirements.txt
+include .env.example
+recursive-include api_routes *.py
+recursive-include models *.py
+recursive-include services *.py
+recursive-include utils *.py

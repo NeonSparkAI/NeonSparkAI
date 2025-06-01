@@ -3,10 +3,16 @@ services:
     name: neonspark-ai
     env: python
     region: singapore  # Optional: Choose a region closer to your users
+
+    # Build configuration
     buildCommand: |
       chmod +x ./build.sh
       ./build.sh
-    startCommand: python start_backend.py
+
+    # Start command
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers $WEB_CONCURRENCY
+
+    # Environment variables
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
@@ -18,17 +24,33 @@ services:
         value: /usr/share/tesseract-ocr
       - key: ENVIRONMENT
         value: production
-    autoDeploy: true
-    plan: free
-    healthCheckPath: /health
-    build:
-      commands:
-        - apt-get update -qq
-        - apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
-        - pip install --upgrade pip
-        - pip install -r requirements.txt
-    envVars:
       - key: LOG_LEVEL
         value: info
       - key: WEB_CONCURRENCY
         value: "1"
+      - key: PORT
+        value: 10000
+
+    # Auto-deploy settings
+    autoDeploy: true
+
+    # Plan configuration
+    plan: free
+
+    # Health check path (adjust if your API has a health check endpoint)
+    healthCheckPath: /health
+
+    # Build settings
+    build:
+      commands:
+        - apt-get update -qq
+        - apt-get install -y --no-install-recommends \
+            tesseract-ocr \
+            tesseract-ocr-eng \
+            libtesseract-dev \
+            libleptonica-dev \
+            pkg-config \
+            liblept5 \
+            libtesseract5
+        - pip install --upgrade pip
+        - pip install -e .
