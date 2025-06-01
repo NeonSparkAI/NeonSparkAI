@@ -64,7 +64,9 @@ def check_and_install_tesseract():
             check=True
         )
         
-        logger.info(f"Tesseract found: {version_result.stdout.split('\n')[0]}")
+        # Get the first line of the version output
+        version_line = version_result.stdout.splitlines()[0] if version_result.stdout else 'unknown version'
+        logger.info(f"Tesseract found: {version_line}")
         return True
         
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
