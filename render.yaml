@@ -3,18 +3,32 @@ services:
     name: neonspark-ai
     env: python
     region: singapore  # Optional: Choose a region closer to your users
-    buildCommand: chmod +x ./build.sh && ./build.sh
+    buildCommand: |
+      chmod +x ./build.sh
+      ./build.sh
     startCommand: python start_backend.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
       - key: PYTHONUNBUFFERED
-        value: "1"
+        value: true
       - key: PYTHONPATH
-        value: "/opt/render/project/src:/opt/render/project"
-    autoDeploy: yes
+        value: /opt/render/project/src
+      - key: TESSDATA_PREFIX
+        value: /usr/share/tesseract-ocr
+      - key: ENVIRONMENT
+        value: production
+    autoDeploy: true
     plan: free
+    healthCheckPath: /health
     build:
       commands:
-        - chmod +x ./build.sh
-        - ./build.sh
+        - apt-get update -qq
+        - apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+        - pip install --upgrade pip
+        - pip install -r requirements.txt
+    envVars:
+      - key: LOG_LEVEL
+        value: info
+      - key: WEB_CONCURRENCY
+        value: "1"
